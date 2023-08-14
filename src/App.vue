@@ -19,6 +19,7 @@
 import MapContainer from "./components/MapContainer";
 import Edit from "./components/Edit";
 import Inspect from "./components/Inspect";
+import axios from "axios";
 
 export default {
   name: "App",
@@ -29,69 +30,26 @@ export default {
   },
   data: () => ({
     selected: undefined,
-    geojson: {
-      features: [
-        {
-          geometry: {
-            coordinates: [
-              [
-                [13.374787002, 52.480111062],
-                [13.374787002, 52.479392288],
-                [13.375988632, 52.479392288],
-                [13.375988632, 52.480111062],
-                [13.374787002, 52.480111062],
-              ],
-            ],
-            type: "Polygon",
-          },
-          properties: {
-            fill: "rgba(255, 0, 255, 0.5)",
-          },
-          type: "Feature",
-          id: "sm62140ef8",
-        },
-        {
-          geometry: {
-            coordinates: [
-              [
-                [17.374787002, 53.480111062],
-                [17.374787002, 53.479392288],
-                [17.375988632, 53.479392288],
-                [17.375988632, 53.480111062],
-                [17.374787002, 53.480111062],
-              ],
-            ],
-            type: "Polygon",
-          },
-          properties: {
-            fill: "rgba(255, 0, 255, 0.5)",
-          },
-          type: "Feature",
-          id: "sm6",
-        },
-        {
-          geometry: {
-            coordinates: [13.377249266, 52.479715735],
-            type: "Point",
-          },
-          properties: { name: "Hello" },
-          type: "Feature",
-          id: "sm9982aad2",
-        },
-        {
-          geometry: {
-            coordinates: [17.377249266, 53.479715735],
-            type: "Point",
-          },
-          properties: { name: "Hello from the other side" },
-          type: "Feature",
-          id: "sm9",
-        },
-      ],
-      type: "FeatureCollection",
-      id: "root",
-    },
+    geojson: null,
   }),
+  mounted: function () {
+    this.pollGis();
+  },
+  methods: {
+    pollGis: function () {
+      axios
+        .get("http://localhost:8112/services/gisbackend/v1_0/overlay")
+        .then((response) => {
+          this.geojson = response.data[0];
+        })
+        .catch((error) => {
+          console.log(error);
+        });
+
+      // poll every 5 seconds
+      setTimeout(this.pollGis, 5000);
+    },
+  },
 };
 </script>
 

@@ -16,6 +16,7 @@ import Style from "ol/style/Style";
 import Fill from "ol/style/Fill";
 import Text from "ol/style/Text";
 import Stroke from "ol/style/Stroke";
+import axios from "axios";
 // import { fromLonLat } from "ol/proj";
 // import ol from "ol";
 
@@ -29,6 +30,7 @@ export default {
     olMap: null,
     vectorLayer: null,
     selectedFeature: null,
+    centered: false,
   }),
   mounted() {
     this.vectorLayer = new VectorLayer({
@@ -58,7 +60,21 @@ export default {
         (feature) => feature
       );
       if (clicked !== null) {
-        console.log(clicked);
+        const call = clicked.get("onClick");
+        if (call) {
+          axios
+            .post(call.url, call.body, {
+              headers: {
+                "Content-Type": call["Content-Type"],
+              },
+            })
+            .then((response) => {
+              console.log(response);
+            })
+            .catch((error) => {
+              console.log(error);
+            });
+        }
       }
     });
 
@@ -68,8 +84,7 @@ export default {
         (feature) => feature
       );
       if (hovered !== this.selectedFeature) {
-        console.log(hovered);
-        if (hovered) {
+        if (hovered && hovered.get("onClick")) {
           const style = hovered.getStyle();
           if (style) {
             style.setStroke(
@@ -104,7 +119,6 @@ export default {
   },
   methods: {
     updateSource(geojson) {
-      const view = this.olMap.getView();
       const source = this.vectorLayer.getSource();
 
       const features = new GeoJSON({
@@ -128,7 +142,6 @@ export default {
         }
 
         const fill = feature.get("fill");
-        console.log(fill);
         if (fill) {
           feature.setStyle(
             new Style({
@@ -143,7 +156,11 @@ export default {
       source.clear();
       source.addFeatures(features);
 
-      view.fit(source.getExtent());
+      if (!this.centered) {
+        this.centered = true;
+        const view = this.olMap.getView();
+        view.fit(source.getExtent());
+      }
     },
   },
 };
